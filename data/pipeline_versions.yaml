@@ -1,0 +1,31 @@
+IUVS_data: 13
+fits_to_hdf5: 1
+APP_flip: 1
+latest_swath_number_validated_orbit: 0
+relay: 1
+apoapsis: 1
+brightness: 1
+wavelengths: 1
+mlr: 1
+radiance: 1
+dayside_retrieval: 1
+
+
+# Pipelines:
+# make empty data file
+# fill with IUVS data
+# fill with APP
+# fill with swath number
+# fill with relay
+# fill with apoapsis
+# fill with kR
+# fill with wavelengths
+# fill with mlr
+# fill with radiance
+# fill with retrievals
+
+# dayside QL HEQ
+# dayside QL sqrt
+# dayside upright globe HEQ
+# dayside upright globe sqrt
+# ...
