@@ -6,7 +6,7 @@ import pyuvs as pu
 
 
 def make_hdf5_filename(orbit: pu.Orbit, save_location: Path) -> Path:
-    filename = f'apoapse-{orbit.code}-muv-new.hdf5'
+    filename = f'apoapse-{orbit.code}-muv.hdf5'
     return save_location / orbit.block / filename
 
 

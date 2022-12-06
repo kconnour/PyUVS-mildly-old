@@ -29,9 +29,13 @@ def fill_hdf5_file_with_fits_info(orbit: int, hdf5_location: Path, fits_location
     # Add day/night dependent data
     for dayside in [True, False]:
         daynight_hduls = [hduls[c] for c, f in enumerate(dayside_files) if f == dayside]
-        fill_detector_group(hdf5_file, daynight_hduls, dayside)
-        fill_pixel_geometry_group(hdf5_file, daynight_hduls, dayside)
-        fill_binning_group(hdf5_file, daynight_hduls, dayside)
+        try:
+            fill_detector_group(hdf5_file, daynight_hduls, dayside)
+            fill_pixel_geometry_group(hdf5_file, daynight_hduls, dayside)
+            fill_binning_group(hdf5_file, daynight_hduls, dayside)
+        # This is the case if no daynight_hduls. np.vstack([]) gives an error
+        except ValueError:
+            continue
 
     hdf5_file.close()
 
@@ -39,8 +43,8 @@ def fill_hdf5_file_with_fits_info(orbit: int, hdf5_location: Path, fits_location
 def update_data_file_versions(hdf5_file: h5py.File) -> None:
     pipeline_versions = get_latest_pipeline_versions()
 
-    hdf5_file.attrs['fits_to_hdf5'] = pipeline_versions['fits_to_hdf5']
-    hdf5_file.attrs['IUVS_data'] = pipeline_versions['IUVS_data']
+    hdf5_file['versions'].attrs['fits_to_hdf5'] = pipeline_versions['fits_to_hdf5']
+    hdf5_file['versions'].attrs['IUVS_data'] = pipeline_versions['IUVS_data']
 
 
 def determine_dayside_files(fits_files: list[hdulist]) -> np.ndarray[bool]:

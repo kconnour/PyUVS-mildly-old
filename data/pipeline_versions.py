@@ -15,4 +15,4 @@ def get_latest_pipeline_versions() -> dict:
 
 def current_file_is_up_to_date(hdf5_file: h5py.File, pipeline: str) -> bool:
     latest_pipeline_versions = get_latest_pipeline_versions()
-    return hdf5_file.attrs[pipeline] == latest_pipeline_versions[pipeline]
+    return hdf5_file['versions'].attrs[pipeline] == latest_pipeline_versions[pipeline]

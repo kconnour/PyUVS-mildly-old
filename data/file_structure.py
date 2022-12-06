@@ -19,8 +19,9 @@ def make_hdf5_file(orbit: int, hdf5_location: Path, fits_location: Path) -> None
 
     hdf5_file = h5py.File(hdf5_filename, mode='r+')  # 'r+' means read/write but the file must already exist
 
-    add_metadata(orbit, hdf5_file, pipeline_versions)
+    add_metadata(orbit, hdf5_file)
     create_groups(hdf5_file)
+    add_version_info(hdf5_file, pipeline_versions)
 
     # Get data
     fits_files = pu.find_latest_apoapse_muv_file_paths_from_block(fits_location, orbit.orbit)
@@ -51,22 +52,29 @@ def determine_daynight_shape(hduls, dayside: bool) -> tuple[int, int, int]:
         detector_image = np.vstack([add_dimension_if_necessary(f['detector_raw'].data, 3) for f in daynight_hduls])
         detector_shape = detector_image.shape
     else:
-        detector_shape = (None, None, None)
+        detector_shape = (0, 0, 0)
     return detector_shape
 
 
-def add_metadata(orbit: pu.Orbit, hdf5_file: h5py.File, pipeline_version: dict) -> None:
+def add_metadata(orbit: pu.Orbit, hdf5_file: h5py.File) -> None:
     hdf5_file.attrs['orbit'] = orbit.orbit
-    hdf5_file.attrs['app_flip'] = False
+    hdf5_file.attrs['app_flip'] = 0
+    hdf5_file.attrs['n_swaths'] = 0
 
+
+def add_version_info(hdf5_file: h5py.File, pipeline_version: dict) -> None:
+    versions = hdf5_file['versions']
     # Set all keys to 0. They will be updated when part of a pipeline processes.
     for key in pipeline_version.keys():
-        hdf5_file.attrs[key] = 0
+        versions.attrs[key] = 0
 
-    hdf5_file.attrs['structure'] = pipeline_version['structure']
+    versions.attrs['structure'] = pipeline_version['structure']
 
 
 def create_groups(hdf5_file: h5py.File) -> None:
+    hdf5_file.create_group('versions')
+    hdf5_file.create_group('integration')
+
     hdf5_file.create_group('dayside_detector')
     hdf5_file.create_group('dayside_binning')
     hdf5_file.create_group('dayside_pixel_geometry')
@@ -74,8 +82,6 @@ def create_groups(hdf5_file: h5py.File) -> None:
     hdf5_file.create_group('nightside_detector')
     hdf5_file.create_group('nightside_binning')
     hdf5_file.create_group('nightside_pixel_geometry')
-
-    hdf5_file.create_group('integration')
 
 
 def create_empty_integration_datasets(hdf5_file: h5py.File, n_integrations) -> None:
@@ -120,6 +126,12 @@ def create_empty_integration_datasets(hdf5_file: h5py.File, n_integrations) -> N
 
     integration_time = integration.create_dataset('integration_time', shape=shape, dtype='f8')
     integration_time.attrs['unit'] = 'seconds'
+
+    swath_number = integration.create_dataset('swath_number', shape=shape, dtype='i2')
+    swath_number.attrs['comment'] = 'The swath number corresponding to each integration'
+
+    relay_integrations = integration.create_dataset('relay_integrations', shape=shape, dtype='bool')
+    relay_integrations.attrs['comment'] = 'True if a relay integration; False otherwise (nominal data)'
 
 
 def create_empty_detector_datasets(hdf5_file, shape, dayside: bool) -> None:
